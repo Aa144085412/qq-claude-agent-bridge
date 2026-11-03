@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>骑自行车的鹈鹕 · SVG 动画</title>
+<style>
+  :root{
+    --sky1:#bfe6ff; --sky2:#eaf6ff;
+    --ground:#8fbf7f; --road:#5b6b7a; --roadline:#f4efe6;
+    --pelican:#f6efe1; --beak:#f2a93b; --pouch:#f7c066; --wing:#e9dcc7;
+    --frame:#e8502e; --tire:#262b31; --spoke:#8a97a6; --seat:#37474f;
+  }
+  html,body{margin:0;height:100%;}
+  body{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;background:radial-gradient(circle at 50% 30%, #eaf6ff, #cfe8ff 70%, #bfe0ff);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif;
+    color:#27415a;padding:18px;
+  }
+  .card{
+    width:min(92vw,880px);background:#fff;border-radius:18px;padding:14px;
+    box-shadow:0 18px 50px rgba(20,60,110,.18);
+  }
+  svg{display:block;width:100%;height:auto;border-radius:12px;background:transparent;}
+  .title{
+    width:min(92vw,880px);display:flex;align-items:center;justify-content:space-between;
+    font-weight:700;letter-spacing:.5px;
+  }
+  .title small{font-weight:500;color:#5c7a99;}
+  .hint{font-size:12.5px;color:#5a7a9a;}
+  /* ---- animation groups ---- */
+  .spin     {transform-box:fill-box;transform-origin:center;animation:spin 1.05s linear infinite;}
+  .spin-slow{transform-box:fill-box;transform-origin:center;animation:spin 1.05s linear infinite reverse;}
+  .crank    {transform-box:fill-box;transform-origin:center;animation:spin 1.05s linear infinite;}
+  .bob      {animation:bob 1.05s ease-in-out infinite;}
+  .wing     {transform-box:fill-box;transform-origin:88% 30%;animation:flap 1.05s ease-in-out infinite;}
+  .ground   {animation:ground 1.05s linear infinite;}
+  .clouds   {animation:ground 14s  linear infinite;}
+  .head-bob {transform-box:fill-box;transform-origin:center;animation:bob 1.05s ease-in-out infinite;}
+  @keyframes spin   {to{transform:rotate(360deg);}}
+  @keyframes bob    {0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+  @keyframes flap   {0%,100%{transform:rotate(0deg);}50%{transform:rotate(-16deg);}}
+  @keyframes ground {from{transform:translateX(0);}to{transform:translateX(-80px);}}
+  @media (prefers-reduced-motion: reduce){
+    .spin,.spin-slow,.crank,.bob,.wing,.ground,.clouds,.head-bob{animation:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="title">
+    <span>骑自行车的鹈鹕 <span style="opacity:.55">·</span> 纯 SVG 动画</span>
+    <small>Pelican on a bicycle</small>
+  </div>
+
+  <div class="card">
+    <svg viewBox="0 0 800 500" role="img" aria-label="一只鹈鹕骑着自行车在草地上前进">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#cdeeff"/>
+          <stop offset="1" stop-color="#eefaff"/>
+        </linearGradient>
+        <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9bcf8a"/>
+          <stop offset="1" stop-color="#6fa866"/>
+        </linearGradient>
+        <g id="wheel">
+          <!-- tire + rim -->
+          <circle r="55" fill="none" stroke="var(--tire)" stroke-width="11"/>
+          <circle r="40" fill="none" stroke="var(--spoke)" stroke-width="2"/>
+          <g stroke="var(--spoke)" stroke-width="3" stroke-linecap="round">
+            <line x1="0" y1="-40" x2="0" y2="40"/>
+            <line x1="-40" y1="0" x2="40" y2="0"/>
+            <line x1="-28.3" y1="-28.3" x2="28.3" y2="28.3"/>
+            <line x1="-28.3" y1="28.3" x2="28.3" y2="-28.3"/>
+          </g>
+          <circle r="6" fill="var(--seat)"/>
+        </g>
+      </defs>
+
+      <!-- SKY -->
+      <rect x="0" y="0" width="800" height="360" fill="url(#sky)"/>
+
+      <!-- SUN -->
+      <circle cx="688" cy="86" r="40" fill="#ffe08a"/>
+      <circle cx="688" cy="86" r="58" fill="#ffe08a" opacity=".28"/>
+
+      <!-- CLOUDS (scroll slowly) -->
+      <g class="clouds" fill="#ffffff" opacity=".9">
+        <g id="cloudset">
+          <g transform="translate(120,90)">
+            <ellipse cx="0" cy="0" rx="42" ry="22"/>
+            <ellipse cx="34" cy="8" rx="30" ry="18"/>
+            <ellipse cx="-32" cy="8" rx="26" ry="16"/>
+          </g>
+          <g transform="translate(430,150) scale(.8)">
+            <ellipse cx="0" cy="0" rx="42" ry="22"/>
+            <ellipse cx="34" cy="8" rx="30" ry="18"/>
+            <ellipse cx="-32" cy="8" rx="26" ry="16"/>
+          </g>
+        </g>
+        <!-- duplicated set shifted +800 for seamless loop -->
+        <use href="#cloudset" x="800"/>
+      </g>
+
+      <!-- GRASS + ROAD -->
+      <rect x="0" y="360" width="800" height="140" fill="url(#grass)"/>
+      <rect x="0" y="392" width="800" height="34" fill="var(--road)"/>
+      <!-- road dashes (scroll left = moving forward) -->
+      <g class="ground">
+        <g stroke="var(--roadline)" stroke-width="6" stroke-dasharray="34 46">
+          <line x1="-80" y1="409" x2="880" y2="409"/>
+        </g>
+      </g>
+
+      <!-- =================== BIKE + PELICAN =================== -->
+      <g id="rider">
+        <!-- wheels -->
+        <g transform="translate(285,345)"><g class="spin"><use href="#wheel"/></g></g>
+        <g transform="translate(520,345)"><g class="spin"><use href="#wheel"/></g></g>
+
+        <!-- frame -->
+        <g stroke="var(--frame)" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <!-- chainstay: rear hub -> bottom bracket -->
+          <line x1="285" y1="345" x2="378" y2="360"/>
+          <!-- seat tube: bottom bracket -> seat -->
+          <line x1="378" y1="360" x2="345" y2="285"/>
+          <!-- down tube: bottom bracket -> head tube bottom -->
+          <line x1="378" y1="360" x2="505" y2="300"/>
+          <!-- top tube: seat -> head tube top -->
+          <line x1="345" y1="290" x2="505" y2="296"/>
+          <!-- head tube / fork: head -> front hub -->
+          <line x1="505" y1="298" x2="520" y2="345"/>
+          <!-- seatstay: rear hub -> seat -->
+          <line x1="285" y1="345" x2="345" y2="290" stroke-width="7"/>
+        </g>
+
+        <!-- handlebars -->
+        <g stroke="var(--seat)" stroke-width="8" fill="none" stroke-linecap="round">
+          <line x1="505" y1="298" x2="498" y2="278"/>
+          <path d="M498 278 q -18 2 -26 16"/>
+        </g>
+
+        <!-- seat -->
+        <rect x="325" y="280" width="44" height="12" rx="6" fill="var(--seat)"/>
+
+        <!-- crank + pedal (rotates) -->
+        <g transform="translate(378,360)">
+          <g class="crank">
+            <line x1="0" y1="0" x2="0" y2="-26" stroke="var(--seat)" stroke-width="6" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="0" y2="26"  stroke="var(--seat)" stroke-width="6" stroke-linecap="round"/>
+            <rect x="-14" y="-32" width="28" height="7" rx="3" fill="#262b31"/>
+            <rect x="-14" y="25"  width="28" height="7" rx="3" fill="#262b31"/>
+          </g>
+          <circle r="6" fill="var(--seat)"/>
+        </g>
+
+        <!-- ============ PELICAN (bobbing) ============ -->
+        <g class="bob">
+          <!-- back leg -> rear pedal -->
+          <g stroke="#e0932f" stroke-width="8" fill="none" stroke-linecap="round">
+            <path d="M356 276 Q 360 320 372 350"/>
+            <path d="M372 350 l -12 6 14 4"/>
+          </g>
+
+          <!-- tail feathers -->
+          <path d="M330 250 l -26 -10 6 16 -16 2 18 8 z" fill="var(--wing)"/>
+
+          <!-- body -->
+          <path d="M312 250
+                  C 318 232 350 224 372 234
+                  C 392 242 392 262 378 272
+                  C 360 284 328 282 314 270
+                  C 306 264 306 256 312 250 Z"
+                fill="var(--pelican)"/>
+
+          <!-- front leg -> front pedal (drawn over body) -->
+          <g stroke="#f2a93b" stroke-width="8" fill="none" stroke-linecap="round">
+            <path d="M366 270 Q 384 316 380 348"/>
+            <path d="M380 348 l 14 4 -13 8"/>
+          </g>
+
+          <!-- wing (flapping, drawn on body) -->
+          <g class="wing">
+            <path d="M344 246
+                    C 322 250 312 268 318 286
+                    C 330 280 344 272 356 262
+                    C 360 254 356 248 344 246 Z"
+                  fill="var(--wing)"/>
+            <path d="M330 258 q 12 2 20 12" stroke="#d8c8a8" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- neck -->
+          <path d="M368 236 C 384 224 392 210 392 196"
+                stroke="var(--pelican)" stroke-width="20" fill="none" stroke-linecap="round"/>
+          <!-- neck shading -->
+          <path d="M368 236 C 384 224 392 210 392 196"
+                stroke="#efe6d4" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+          <g class="head-bob">
+            <!-- head -->
+            <circle cx="392" cy="190" r="26" fill="var(--pelican)"/>
+            <!-- big pelican bill + throat pouch -->
+            <path d="M404 182
+                    L 476 196
+                    C 486 198 486 206 476 208
+                    L 414 210
+                    C 414 220 400 224 388 218
+                    C 380 214 380 206 386 202
+                    L 410 198 Z"
+                  fill="var(--beak)"/>
+            <!-- pouch (sac) under the bill -->
+            <path d="M410 206 C 428 224 458 226 474 210
+                    C 466 226 440 236 416 226
+                    C 408 222 406 214 410 206 Z"
+                  fill="var(--pouch)"/>
+            <!-- bill tip -->
+            <path d="M470 196 L 484 200 L 470 207 Z" fill="#e0861f"/>
+            <!-- eye -->
+            <circle cx="402" cy="186" r="6" fill="#22303a"/>
+            <circle cx="404" cy="184" r="2" fill="#ffffff"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- motion lines behind the bike -->
+      <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".7">
+        <line x1="150" y1="300" x2="210" y2="300"/>
+      </g>
+    </svg>
+  </div>
+  <div class="hint">纯 SVG + CSS 动画，无需任何依赖，直接双击用浏览器打开即可。</div>
+</body>
+</html>

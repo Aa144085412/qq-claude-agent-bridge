@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local Claude session config (permission allow-list overrides; not project code)
+.claude/
+
+# Backup files
+*.bak
+*.bak-*
+*.before-*.bak
+
+# Dev snapshot / backup directories
+migration-backup-*/
+claude-403-handling-backup-*/
+claude-exitcode1-fix-*/
+claude-provider-routing-fix-*/
+qq-receiver-singleton-fix-*/
+
+# Runtime log / dump outputs (may contain sensitive session text)
+*.txt
+
+# One-shot probe / smoke / upgrade / migration scripts (dev-only)
+probe_*.py
+smoke_*.py
+check_*.py
+reset_*.py
+live_acceptance_*.py
+_patch_*.py
+_upgrade_*.py
+
+# Generated demo screenshots
+pelican-shot-*.png
+
+# Data / logs / secrets (guard against future commits)
+*.db
+*.sqlite3
+*.jsonl
+.env
+inbound-images/
