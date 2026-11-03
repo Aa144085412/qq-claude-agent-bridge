@@ -96,9 +96,12 @@ PROMPT_POLICY = (
     "web page use the headless Edge browser, e.g. msedge --headless --"
     "disable-gpu --no-sandbox --hide-scrollbars --force-device-scale-factor"
     "=1 --window-size=900,1400 --screenshot=C:\\path\\out.png file:///C:"
-    "\\path\\page.html - verify the file exists, then end your reply with a "
-    "marker line QQ_SEND_IMAGE:<absolute_path_to_png> (one per line, at most "
-    "4); the bridge will send those images to the owner in QQ."
+    "\\path\\page.html - confirm the PNG exists and is non-empty using a "
+    "Bash check (e.g. test -f and stat -c %s), and do NOT open or Read the "
+    "PNG into your own context (reading an image bloats the session and the "
+    "local vision lane rejects it), then end your reply with a marker line "
+    "QQ_SEND_IMAGE:<absolute_path_to_png> (one per line, at most 4); the "
+    "bridge will send those images to the owner in QQ."
 )
 
 class ClaudeBridgeError(Exception):
@@ -126,7 +129,7 @@ def _record_bridge_event(event: str, *, attempt: int, exit_code: int,
                          status: int | None, subtype: str | None,
                          elapsed_ms: int) -> None:
     """Minimal diagnostics; never store prompts, model responses or credentials."""
-    allowed_events = {"claude_cli_failed", "claude_cli_403_retry"}
+    allowed_events = {"claude_cli_failed", "claude_cli_403_retry", "claude_cli_timeout"}
     if event not in allowed_events:
         return
     try:
@@ -238,9 +241,14 @@ def _run_native(prompt: str, session_id: str | None):
                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
             except subprocess.TimeoutExpired as exc:
+                _record_bridge_event(
+                    "claude_cli_timeout", attempt=attempt,
+                    exit_code=-1, status=None, subtype="timeout",
+                    elapsed_ms=int((time.monotonic() - started) * 1000),
+                )
                 raise ClaudeBridgeError(
                     "Claude Code 本地调用超时；本次任务未完成，"
-                    "若已有命令执行请自行确认结果后重试。"
+                    "可能有命令已启动，请核对 Codex/审计日志后再重试。"
                 ) from exc
             except OSError as exc:
                 raise ClaudeBridgeError(
@@ -306,6 +314,27 @@ def _run_native(prompt: str, session_id: str | None):
             break
 
     if result.returncode != 0:
+        # Flush command audit before raising: the stream may have already run
+        # Bash commands that would otherwise be silently lost on error. Fresh
+        # sessions only learn their CLI-generated ID from the result event.
+        err_id = (
+            session_id
+            if session_id is not None
+            else (failure.get("session_id")
+                  if isinstance(failure.get("session_id"), str)
+                  and failure.get("session_id")
+                  else str(uuid.uuid4()))
+        )
+        for command, description in deferred_bash:
+            _append_audit(
+                "bash_command", session_id=err_id,
+                command=command, description=description,
+            )
+        _append_audit(
+            "final", session_id=err_id,
+            result_status=str(failure.get("subtype") or "failed"),
+            error=str(failed_status) if failed_status is not None else None,
+        )
         # Don't reflect upstream stderr or arbitrary error text into QQ.
         subtype = failure.get("subtype")
         if subtype == "error_max_turns" or failure.get("terminal_reason") == "max_turns":
@@ -322,7 +351,8 @@ def _run_native(prompt: str, session_id: str | None):
         if failed_status is not None:
             raise ClaudeBridgeError(
                 f"Claude Code 的某次 API 请求返回 HTTP {failed_status}，"
-                "请检查本地服务与桥接诊断记录；该请求未执行任何命令。"
+                "请检查本地服务与桥接诊断记录；可能有命令已启动，"
+                "请核对 Codex/审计日志。"
             )
         raise ClaudeBridgeError(
             "Claude Code 本轮执行失败（退出码 " + str(result.returncode) +
@@ -361,7 +391,8 @@ def _run_native(prompt: str, session_id: str | None):
         )
     answer = str(failure.get("result") or "").strip()
     if result.returncode != 0:
-        # Don't reflect upstream stderr or arbitrary error text into QQ.
+        # Audit final state before raising so executed Bash commands and the
+        # run's terminal state are never lost when a CLI/API error aborts.
         subtype = failure.get("subtype")
         if subtype == "error_max_turns" or failure.get("terminal_reason") == "max_turns":
             raise ClaudeBridgeError(
@@ -377,7 +408,8 @@ def _run_native(prompt: str, session_id: str | None):
         if failed_status is not None:
             raise ClaudeBridgeError(
                 f"Claude Code 的某次 API 请求返回 HTTP {failed_status}，"
-                "请检查本地服务与桥接诊断记录；该请求未执行任何命令。"
+                "请检查本地服务与桥接诊断记录；可能有命令已启动，"
+                "请核对 Codex/审计日志。"
             )
         raise ClaudeBridgeError(
             "Claude Code 本轮执行失败（退出码 " + str(result.returncode) +
