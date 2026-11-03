@@ -24,7 +24,7 @@ MODEL = "local-qwen38-gsq"
 # the CLI child gets the 1024-token reasoning budget (MAX_THINKING_TOKENS).
 # The 18081 public lane stays untouched and still serves NInfer's other users.
 BASE_URL = "http://127.0.0.1:18082"
-CLAUDE_EXE = Path(os.environ.get("APPDATA", r"C:\Users\a144x\AppData\Roaming")) / (
+CLAUDE_EXE = Path(os.environ.get("APPDATA", str(Path.home() / "AppData" / "Roaming"))) / (
     r"npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe"
 )
 WORKSPACE = Path(r"C:\claude_code_project")

@@ -3,7 +3,7 @@ $root='C:\claude_code_project\qq-small-agent'
 $data=Join-Path $env:LOCALAPPDATA 'QQ-Small-Agent-Pilot'
 New-Item -ItemType Directory -Path $data -Force | Out-Null
 $log=Join-Path $data 'command-agent-service.log'
-$python='C:\Users\a144x\AppData\Local\Programs\Python\Python313\python.exe'
+$python=Join-Path $env:LOCALAPPDATA 'Programs\Python\Python313\python.exe'
 if(!(Test-Path -LiteralPath $python)) {throw 'Python 3.13 runtime not found'}
 if(!(Test-Path -LiteralPath (Join-Path $root 'qq_command_agent.py'))) {throw 'QQ v2 receiver missing'}
 $mutex=New-Object System.Threading.Mutex($false,'Local\QQSmallAccountAgentV2')
