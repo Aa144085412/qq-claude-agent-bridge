@@ -46,3 +46,18 @@ OneBot WebSocket：127.0.0.1:3001
     Stop-ScheduledTask QQ-Small-Agent-V2
 启动接收器：
     Start-ScheduledTask QQ-Small-Agent-V2
+
+## 部署到另一台机器
+
+clone 只得到纯代码（仓库内不含 token、owner 绑定、聊天记录），实际跑起来需要目标机器具备：
+
+1. **Windows**：使用 ctypes 截图、headless Edge、PowerShell、msvcrt 文件锁。
+2. **Python 3.13**（或较新 3.x）：`pip install -r requirements.txt`（唯一第三方库 `websockets`）。
+3. **NapCat / OneBot v11** 同机运行并登录 QQ：
+   - 事件 WS `ws://127.0.0.1:3001`、HTTP API `http://127.0.0.1:3000`（代码强制这两个地址，拒绝其他地址启动）。
+   - OneBot token 运行时从 `%PROGRAMDATA%\NapCatQQ Desktop\config\bot.json` 读取，不在仓库内。
+4. **模型通道**（按模式选其一）：
+   - chat 模式：本地模型 `http://127.0.0.1:18081/v1/chat/completions`。
+   - claude 模式：Claude Code CLI + 控制通道 `http://127.0.0.1:18082`，且 `%USERPROFILE%\.claude\settings.json` 内有有效 `env.ANTHROPIC_AUTH_TOKEN`（不在仓库内）。
+5. **启动脚本路径**：`Start-QQ-Command-Agent.ps1` 里 `$root`、`$python` 是原机绝对路径，换机器需改成对应路径，或直接 `python qq_command_agent.py run` 运行。
+6. **重新绑定主人**：owner 绑定存在本地 SQLite（`%LOCALAPPDATA%\QQ-Small-Agent-Pilot\`），新机器首次启动未绑定，需在本地控制台生成配对码，再在 QQ 私聊发 `/绑定 <code>`。

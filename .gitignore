@@ -20,6 +20,7 @@ qq-receiver-singleton-fix-*/
 
 # Runtime log / dump outputs (may contain sensitive session text)
 *.txt
+!requirements.txt
 
 # One-shot probe / smoke / upgrade / migration scripts (dev-only)
 probe_*.py
